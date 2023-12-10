@@ -1,0 +1,22 @@
+{
+  "name": "wpcreator",
+  "version": "0.0.1",
+  "description": "Plugin and theme boilerplate generator for wordpress developer",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hamedmoody/wpcreator.git"
+  },
+  "keywords": [
+    "wordrpess"
+  ],
+  "author": "Hamed Moodi",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/hamedmoody/wpcreator/issues"
+  },
+  "homepage": "https://github.com/hamedmoody/wpcreator#readme"
+}
