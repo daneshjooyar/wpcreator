@@ -15,7 +15,7 @@ module.exports = class File_Generator {
     }
 
     star_comment( comment, tab_count = 0 ){
-        let comments = Array.from( comment );
+        let comments = Array.isArray( comment ) ? comment : [comment];
         this.line( '/**', tab_count );
         for( let comment of comments ){
             this.line( ' * ' + comment, tab_count );
