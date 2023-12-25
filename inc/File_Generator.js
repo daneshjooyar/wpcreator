@@ -1,5 +1,6 @@
 'use strict';
-const fs = require('fs');
+const fs        = require('fs');
+const config    = require('../Config.js');
 
 module.exports = class File_Generator {
 
@@ -26,10 +27,11 @@ module.exports = class File_Generator {
 
     file_content( file_path ){
         try{
-            this.body_code+= fs.readFileSync( file_path, 'utf8' );
+            this.body_code+= fs.readFileSync( config.path.raw_code + file_path, 'utf8' );
         }catch ( err ){
             console.log( err );
         }
+        return this;
     }
 
     plugin_header_line( key, value ){

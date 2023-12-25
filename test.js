@@ -13,5 +13,6 @@ const Plugin_Generator  = require( path.join( current_path, 'inc', 'Plugin_Gener
 
 const plugin            = new Plugin_Generator( plugin_name );
 
-//plugin.generate();
+
+plugin.generate();
 //plugin.silent_index_to('');

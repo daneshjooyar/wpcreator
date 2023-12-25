@@ -1,0 +1,24 @@
+    /**
+	 * Upload attachment to wordpress
+	 * @return int|\WP_Error ID of the attachment or a WP_Error object on failure.
+	 */
+	public function upload_attachment( $file_id, $post_id = 0 ){
+
+		if( ! function_exists( 'media_handle_upload' ) ){
+
+			/** WordPress Administration File API */
+			require_once ABSPATH . 'wp-admin/includes/file.php';
+
+			/** WordPress Image Administration API */
+			require_once ABSPATH . 'wp-admin/includes/image.php';
+
+			/** WordPress Media Administration API */
+			require_once ABSPATH . 'wp-admin/includes/media.php';
+
+		}
+
+		return media_handle_upload(
+			$file_id, $post_id
+		);
+
+	}

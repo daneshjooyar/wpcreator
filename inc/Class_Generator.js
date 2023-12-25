@@ -1,6 +1,7 @@
 'use strict';
-const fs = require('fs');
-const File_Generator = require('./File_Generator.js');
+const fs                = require('fs');
+const File_Generator    = require('./File_Generator.js');
+const config            = require('../Config.js');
 
 module.exports = class ClassGenerator extends File_Generator {
     constructor(class_name) {
