@@ -19,7 +19,7 @@ module.exports = class Plugin_Generator {
 
     constructor( plugin_name, plugin_path = process.cwd() ){
         this.plugin_name        = plugin_name;
-        this.plugin_slug        = plugin_name.replace( '/\s+/g', '-' );
+        this.plugin_slug        = plugin_name.toLowerCase().replace( /\s+/g, '-' );
         this.namespace          = plugin_name.split( ' ' ).map( word => word.charAt(0).toUpperCase() + word.slice(1) ).join( '' );
         this.constant_prefix    = plugin_name.toUpperCase().replace(/\s+/g, '_' );
         this.core_function      = plugin_name.toLowerCase().replace(/\s+/g, '_' );
