@@ -1,0 +1,8 @@
+    /**
+	 * Get wordpress wpdb database object
+	 * @return \wpdb
+	 */
+	public function db(){
+		global $wpdb;
+		return $wpdb;
+	}

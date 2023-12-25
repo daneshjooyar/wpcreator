@@ -1,13 +1,15 @@
 'use strict';
-const fs = require('fs');
-const File_Generator = require('./File_Generator.js');
-const config = require('../Config.js');
+const fs                = require('fs');
+const File_Generator    = require('./File_Generator.js');
+const Class_Generator   = require('./Class_Generator.js');
+const config            = require('../Config.js');
 
 module.exports = class Plugin_Generator {
 
     plugin_name         = '';
 
     plugin_directory    = '';
+    plugin_path         = '';
     lang_directory      = '';
     namespace           = '';
     plugin_slug         = '';
@@ -15,16 +17,115 @@ module.exports = class Plugin_Generator {
     core_function       = '';
     plugin_name         = '';
 
+    /**
+     * Use for header
+     */
+    plugin_uri          = '';
+    description         = '';
+    version             = '1.0.0';
+    author              = '';
+    min_php_version     = '';
+    min_wp_version      = '';
+    author_uri          = '';
+    license             = '';
+    license_uri         = '';
+    update_uri          = '';
+    text_domain         = '';
+    domain_path         = '/languages';
+
     header              = {};
 
     constructor( plugin_name, plugin_path = process.cwd() ){
+        this.plugin_path        = plugin_path;
         this.plugin_name        = plugin_name;
-        this.plugin_slug        = plugin_name.replace( '/\s+/g', '-' );
+        this.plugin_slug        = plugin_name.toLowerCase().replace( /\s+/g, '-' );
         this.namespace          = plugin_name.split( ' ' ).map( word => word.charAt(0).toUpperCase() + word.slice(1) ).join( '' );
         this.constant_prefix    = plugin_name.toUpperCase().replace(/\s+/g, '_' );
         this.core_function      = plugin_name.toLowerCase().replace(/\s+/g, '_' );
-        this.set_plugin_path( plugin_path + '/' + this.plugin_slug );
-        console.log( this.plugin_slug )
+        this.text_domain        = plugin_name.toLowerCase().replace(/\s+/g, '_' );
+        this.set_plugin_path( this.plugin_path + '/' + this.plugin_slug );
+    }
+
+    set_plugin_uri( uri ){
+        this.plugin_uri = uri;
+        return this;
+    }
+
+    set_plugin_slug( slug ){
+        this.plugin_slug = slug;
+        this.set_plugin_path( this.plugin_path + '/' + this.plugin_slug );
+        return this;
+    }
+
+    set_author( author ){
+        this.author = author;
+        return this;
+    }
+
+    set_min_php_version( version ){
+        this.min_php_version = version;
+        return this;
+    }
+
+    set_min_wp_version( version ){
+        this.min_wp_version = version;
+        return this;
+    }
+
+    set_description( description ){
+        this.description = description;
+        return this;
+    }
+
+    set_version( version ){
+        this.version = version;
+        return this;
+    }
+
+    set_license( license ){
+        this.license = license;
+        return this;
+    }
+
+    set_license_uri( license_uri ){
+        this.license_uri = license_uri;
+        return this;
+    }
+
+    set_update_uri( uri ){
+        this.update_uri = uri;
+        return this;
+    }
+
+    set_domain_path( path ){
+        this.domain_path = path;
+        return this;
+    }
+
+    set_author_uri( uri ){
+        this.author_uri = uri;
+        return this;
+    }
+
+    set_plugin_uri( uri ){
+        this.plugin_uri = uri;
+        return this;
+    }
+
+
+    set_namespace( ns ){
+        this.namespace = ns;
+        return this;
+    }
+
+    set_constant_prefix( prefix ){
+        this.constant_prefix = prefix;
+        return this;
+    }
+
+    set_core_function( function_name ){
+        this.core_function = function_name;
+        return this;
     }
 
     set_plugin_path( path ){
@@ -64,7 +165,7 @@ module.exports = class Plugin_Generator {
             .save_to( path )
     }
 
-    relative_path( path ){
+    relative_path( path = '' ){
         return this.plugin_directory + path.replace(/^\/|\/$/g, '') + '/';
     }
 
@@ -95,7 +196,6 @@ module.exports = class Plugin_Generator {
          */
         const composer_json = new File_Generator();
             composer_json
-                .set_file_name('composer.json')
                 .line('{')
                 .line('"autoload": {', 1)
                 .line('"psr-4": {', 2)
@@ -104,20 +204,139 @@ module.exports = class Plugin_Generator {
                 .line('}', 1)
                 .line('}')
                 .generate()
+                .set_file_name('composer.json')
                 .save_to( this.plugin_directory );
+
+        const uninstall = new File_Generator();
+        uninstall
+            .line('<?php')
+            .line('// if uninstall.php is not called by WordPress, die')
+            .line('if ( ! defined( \'WP_UNINSTALL_PLUGIN\' ) ) {')
+            .line('die;', 1 )
+            .line('}')
+            .generate()
+            .set_file_name( 'uninstall.php' )
+            .save_to( this.relative_path() );
+
 
         /**
          * Generate Constants php file as config file
          */
         const config = new File_Generator();
         config
-            .set_file_name('Config.php')
             .line('<?php')
             .star_comment('Add plugin config here')
             .generate()
+            .set_file_name('Config.php')
             .save_to(
                 this.relative_path('Core')
             );
+
+        /**
+         * Generate Main core plugin file
+         */
+        const core_class = new Class_Generator('Core');
+        core_class
+            .set_type('class')
+            .set_namespace( this.namespace )
+            .line('/**', 1)
+            .line(' * @var string', 1)
+            .line(' */', 1)
+            .line('public $version = \'' + this.version + '\';', 1)
+            .line('')
+            .generate()
+            .set_file_name('Core.php')
+            .save_to( this.relative_path('Core' ) );
+
+
+        /**
+         * Generate Loader file
+         */
+        const loader_class = new Class_Generator('Loader');
+        loader_class
+            .set_namespace( this.namespace )
+            .set_type('class')
+            .set_extends('Core')
+            .line('use Functions;', 1)
+            .line()
+            .star_comment(' * Run ' + this.plugin_name + ' Plugin Modules', 1)
+            .line('public function run(){', 1)
+            .line('', 1)
+            .line('//Run your plugin modules here', 2)
+            .line('', 2)
+
+            .line('$this->translation();', 2 )
+            .line('', 2)
+
+            .line('//Run ajax handler', 2)
+            .line('$ajax	    = new Ajax();', 2)
+            .line('$ajax->listen();', 2)
+            .line('', 2)
+
+            .line('//Enqueue styles and scripts', 2)
+            .line('$enqueue	= new Enqueue();', 2)
+            .line('$enqueue->register();', 2)
+            .line('', 2)
+
+            .line('', 1)
+            .line('}', 1)
+
+            .line('public function translation() {', 1)
+            .line( 'add_action( \'plugins_loaded\', function(){', 2 )
+            .line( 'load_plugin_textdomain(\'' + this.text_domain + '\', false, basename( ' + this.constant_prefix + '_DIR ) . \'/languages/\');', 3 )
+            .line( '});', 2 )
+            .line('}', 1)
+
+            .generate()
+            .set_file_name( 'Loader.php' )
+            .save_to( this.relative_path( 'Core' ) );
+
+        const functions_trait = new Class_Generator('Functions');
+        functions_trait
+            .set_namespace( this.namespace )
+            .set_type('trait')
+
+            .file_content( 'wordpress/method_db.txt' )
+            .line('', 1)
+            .line('', 1)
+
+            .file_content( 'wordpress/method_table.txt' )
+            .line('', 1)
+            .line('', 1)
+
+            .star_comment( ['Get view path in View directory',"@return string"], 1 )
+            .line('public function view_path( $path ){', 1)
+            .line( 'return ' + this.constant_prefix + '_VIEW_DIR . $path;', 2 )
+            .line('}', 1)
+            .line('', 1)
+
+            .star_comment( ['Get Image url',"@return string"], 1 )
+            .line('public function image( $path ){', 1)
+            .line( 'return ' + this.constant_prefix + '_IMAGES_URL . $path;', 2 )
+            .line('}', 1)
+            .line('', 1)
+
+            .star_comment( ['Get Js url',"@return string"], 1 )
+            .line('public function js( $path ){', 1)
+            .line( 'return ' + this.constant_prefix + '_JS_URL . $path;', 2 )
+            .line('}', 1)
+            .line('', 1)
+
+            .star_comment( ['Get Css url',"@return string"], 1 )
+            .line('public function css( $path ){', 1)
+            .line( 'return ' + this.constant_prefix + '_CSS_URL . $path;', 2 )
+            .line('}', 1)
+            .line('', 1)
+
+            .file_content( 'wordpress/function_upload_attachment.txt' )
+            .line('', 1)
+            .line('', 1)
+
+            .generate()
+            .set_file_name( 'Functions.php' )
+            .save_to( this.relative_path( 'Core' ) );
+
+
 
         const core_functions_loader = new File_Generator();
         core_functions_loader
@@ -147,9 +366,7 @@ module.exports = class Plugin_Generator {
 
 
 
-        this.set_header('Plugin Name', 'WPCreator For Daneshjooyar' );
-        this.set_header('Plugin Author', 'Hamed Moodi' );
-        this.set_header('Author URI', 'https://github.com/hamedmoody/' );
+        this.init_headers();
 
         const main_file = new File_Generator();
         main_file
@@ -181,6 +398,10 @@ module.exports = class Plugin_Generator {
             .line( `define( '${this.constant_prefix}_IMAGES_URL', ${this.constant_prefix}_URL . 'assets/images/' );` )
             .line()
 
+            .star_comment( 'define plugin version' )
+            .line( `define( '${this.constant_prefix}_VERSION', '${this.version}' );` )
+            .line()
+
             .star_comment( 'Require autoload for namespace and another dependencies' )
             .line('require \'vendor/autoload.php\';')
             .line()
@@ -197,7 +418,7 @@ module.exports = class Plugin_Generator {
 
 
             .generate()
-            .set_file_name('myplygin.php')
+            .set_file_name( this.plugin_slug + '.php' )
             .save_to( this.plugin_directory )
 
 
@@ -211,6 +432,56 @@ module.exports = class Plugin_Generator {
         }
         header += ' */'
         return header;
+    }
+
+    init_headers(){
+
+        this.set_header( 'Plugin Name', this.plugin_name );
+
+        if( this.plugin_uri && this.plugin_uri.length ){
+            this.set_header( 'Plugin URI', this.plugin_uri );
+        }
+
+        if( this.description && this.description.length ){
+            this.set_header( 'Description', this.description );
+        }
+
+        if( this.version && this.version.length ){
+            this.set_header( 'Version', this.version );
+        }
+
+        if( this.min_wp_version && this.min_wp_version.length ){
+            this.set_header( 'Requires at least', this.min_wp_version );
+        }
+
+        if( this.min_php_version && this.min_php_version.length ){
+            this.set_header( 'Requires PHP', this.min_php_version );
+        }
+
+        if( this.author && this.author.length ){
+            this.set_header( 'Author', this.author );
+        }
+
+        if( this.author_uri && this.author_uri.length ){
+            this.set_header( 'Author URI', this.author_uri );
+        }
+
+        if( this.license && this.license.length ){
+            this.set_header( 'License', this.license );
+        }
+
+        if( this.text_domain && this.text_domain.length ){
+            this.set_header( 'Text Domain', this.text_domain );
+        }
+
+        if( this.domain_path && this.domain_path.length ){
+            this.set_header( 'Domain Path', this.domain_path );
+        }
+
+        if( this.update_uri && this.update_uri.length ){
+            this.set_header( 'Update URI', this.update_uri );
+        }
+
     }
 
 }

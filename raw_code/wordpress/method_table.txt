@@ -1,0 +1,8 @@
+    /**
+	 * Get database table prefixed name
+	 * @return string
+	 */
+	public function table( $table_name ){
+		global $wpdb;
+		return $wpdb->prefix . $table_name;
+	}
