@@ -180,7 +180,7 @@ module.exports = class Plugin_Generator {
     silent_index_to( path = '' ){
         const index = new File_Generator();
         path        = this.path( path );
-        console.log(path)
+        console.log( 'Generated ' + path + 'index.php' )
         index
             .set_file_name('index.php')
             .line('<?php //Silence is gold')

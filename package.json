@@ -2,8 +2,7 @@
   "name": "wpcreator",
   "version": "0.0.1",
   "description": "Plugin and theme boilerplate generator for wordpress developer",
-  "main": "index.js",
-  "scope": "Daneshjooyar",
+  "main": "bin/wpcreator.js",
   "scripts": {
     "test": "node test.js && exit 1"
   },
@@ -12,8 +11,11 @@
     "url": "git+https://github.com/daneshjooyaer/wpcreator.git"
   },
   "keywords": [
-    "wordrpess"
+    "wordrpess", "cli"
   ],
+  "bin": {
+    "wpcreator": "./bin/wpcreator.js"
+  },
   "author": "Hamed Moodi <hamedmoodi2011@gmail.com>",
   "license": "ISC",
   "bugs": {
