@@ -33,6 +33,13 @@ module.exports = class Plugin_Generator {
     text_domain         = '';
     domain_path         = '/languages';
 
+    /**
+     * Ajax Config
+     */
+    has_ajax            = true;
+    ajax_prefix         = '';
+    ajax_server_error   = true;
+
     header              = {};
 
     constructor( plugin_name, plugin_path = process.cwd() ){
@@ -43,7 +50,23 @@ module.exports = class Plugin_Generator {
         this.constant_prefix    = plugin_name.toUpperCase().replace(/\s+/g, '_' );
         this.core_function      = plugin_name.toLowerCase().replace(/\s+/g, '_' );
         this.text_domain        = plugin_name.toLowerCase().replace(/\s+/g, '_' );
+        this.ajax_prefix        = this.text_domain;
         this.set_plugin_path( this.plugin_path + '/' + this.plugin_slug );
+    }
+
+    set_has_ajax( has_ajax ){
+        this.has_ajax = has_ajax;
+        return this;
+    }
+
+    set_ajax_prefix( prefix ){
+        this.ajax_prefix = prefix;
+        return this;
+    }
+
+    set_ajax_server_error( is_server_error ){
+        this.ajax_server_error = is_server_error;
+        return this;
     }
 
     set_plugin_uri( uri ){
@@ -244,6 +267,11 @@ module.exports = class Plugin_Generator {
             .line(' */', 1)
             .line('public $version = \'' + this.version + '\';', 1)
             .line('')
+            .star_comment(['Mange assets version for ignore cache in debug mode'], 1 )
+            .line( 'public function assets_version(){', 1 )
+            .line( 'return defined( \'WP_DEBUG\' ) && WP_DEBUG ? time() : $this->version;', 2 )
+            .line('}', 1 )
+            .line('', 1)
             .generate()
             .set_file_name('Core.php')
             .save_to( this.relative_path('Core' ) );
@@ -266,13 +294,18 @@ module.exports = class Plugin_Generator {
             .line('', 2)
 
             .line('$this->translation();', 2 )
-            .line('', 2)
+            .line('', 2);
 
-            .line('//Run ajax handler', 2)
-            .line('$ajax	    = new Ajax();', 2)
-            .line('$ajax->listen();', 2)
-            .line('', 2)
+        if( this.has_ajax ){
+            this.generate_ajax();
+            loader_class
+                .line('//Run ajax handler', 2)
+                .line('$ajax	    = new Ajax();', 2)
+                .line('$ajax->listen();', 2)
+                .line('', 2);
+        }
 
+        loader_class
             .line('//Enqueue styles and scripts', 2)
             .line('$enqueue	= new Enqueue();', 2)
             .line('$enqueue->register();', 2)
@@ -368,6 +401,8 @@ module.exports = class Plugin_Generator {
 
         this.init_headers();
 
+        this.generate_enqueue();
+
         const main_file = new File_Generator();
         main_file
             .line('<?php')
@@ -432,6 +467,139 @@ module.exports = class Plugin_Generator {
         }
         header += ' */'
         return header;
+    }
+
+    generate_ajax(){
+
+        const ajax_manager = new Class_Generator( 'AjaxManager' );
+        ajax_manager
+            .set_namespace( this.namespace )
+            .set_extends('Core')
+            .set_type('class')
+            .add_comments(['Ajax Request Manager'])
+
+            .file_content( 'Wordpress/class_ajax_manager_methods.txt' )
+            .line('', 1)
+
+            .line('', 1)
+            .star_comment( [
+                'Send result as Json',
+                '@return array if request not ajax send $this'
+        ] , 1)
+            .line('public function send(){', 1)
+            .line('', 2)
+            .star_comment( 'Uncomment below code for active ajax debug trace' , 2)
+            .line('//$this->set_debug_trace();', 2)
+            .line('', 2)
+            .line("if ( defined( 'DOING_AJAX' ) && DOING_AJAX ) {", 2)
+            .line( this.ajax_server_error ? 'wp_send_json( $this->data, $this->data[\'http_code\'] );' : 'wp_send_json( $this->data, 200 );', 3 )
+            .line("}", 2)
+            .line('', 2)
+            .line('return $this->data;', 2)
+            .line('', 2)
+            .line('}', 1)
+            .line('', 1)
+            .generate()
+            .set_file_name('AjaxManager.php')
+            .save_to(this.relative_path( 'Core' ) );
+
+
+        const ajax = new Class_Generator('Ajax');
+        ajax
+            .set_namespace( this.namespace )
+            .set_extends('Core')
+            .set_type('class')
+            .add_comments( ['Manage Ajax actions'] )
+
+            .star_comment( [
+                'AjaxManager object for manage ajax result and message',
+                '@var AjaxManager'
+        ], 1 )
+            .line('private $ajax;', 1)
+            .line('', 1)
+
+            .line('public function __construct(){', 1)
+            .line('$this->ajax 		= new AjaxManager();', 2)
+            .line('}', 1)
+            .line('', 1)
+
+            .star_comment([
+            'Ajax request prefix For action',
+            'Example: Use ' + this.ajax_prefix + 'my_function',
+            'For call my_function method in this class',
+            '@var string',
+    ],1)
+            .line(`private \$prefix = '${this.ajax_prefix}';`, 1)
+            .line('', 1)
+
+            .star_comment([
+            'Listen to wordpress ajax with prefix \'' + this.ajax_prefix + '\' and trigger suffix method',
+            '@throws ReflectionException'
+    ], 1)
+
+            .file_content('Wordpress/class_ajax_handler_methods.txt')
+
+            .line('', 1)
+            .line('', 1)
+            .generate()
+            .set_file_name('Ajax.php')
+            .save_to(this.relative_path( 'Core' ) );
+
+
+    }
+
+    generate_enqueue(){
+
+        const enqueue_manager = new Class_Generator('Enqueue');
+        enqueue_manager
+            .set_namespace( this.namespace )
+            .set_extends( 'Core' )
+            .set_type( 'class' )
+            .add_comments([
+                'Enqueue manager',
+                '',
+                'You can use $this->assets_version() to manage assets cache in plugin',
+                '$this->assets_version() is documented in \'' + this.plugin_slug + '/Core/Core.php\'',
+                'Note: You can use $this->assets_version() for other assets such as images'
+            ])
+
+            .line('use Functions;', 1)
+            .line('', 1)
+
+            .line('public function register(){', 1)
+            . line( "add_action( 'wp_enqueue_scripts', [\$this, 'public_scripts'] );", 2 )
+            . line( "add_action( 'admin_enqueue_scripts', [\$this, 'admin_scripts'] );", 2 )
+            .line('}', 1)
+            .line('', 1 );
+
+        /**
+         * Start public enqueue (styles and scripts)
+         */
+            enqueue_manager.line('public function public_scripts(){', 1)
+                .line('', 2)
+                .line('}', 1)
+                .line('', 1);
+
+
+        /**
+         * Start Admin enqueue (styles and scripts)
+         */
+            enqueue_manager.line('public function admin_scripts(){', 1)
+                .line('', 2)
+                .line('}', 1)
+                .line('', 1);
+
+        /**
+         * End Admin enqueue
+         */
+
+        enqueue_manager
+            .line('', 1)
+            .generate()
+            .set_file_name('Enqueue.php')
+            .save_to( this.relative_path( 'Core' ) );
+
+
     }
 
     init_headers(){
