@@ -230,6 +230,14 @@ module.exports = class Plugin_Generator {
                 .set_file_name('composer.json')
                 .save_to( this.plugin_directory );
 
+        const git_ignore = new File_Generator();
+        git_ignore
+            .line('##### Composer')
+            .line('/vendor/')
+            .generate()
+            .set_file_name('.gitignore')
+            .save_to( this.relative_path() );
+
         const uninstall = new File_Generator();
         uninstall
             .line('<?php')
