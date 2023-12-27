@@ -61,6 +61,7 @@ module.exports = class File_Generator {
         }
         const file_path = path + this.file_name;
         fs.writeFileSync( file_path, this.code );
+        console.log('Generated ' + file_path );
     }
 
     get_body(){
