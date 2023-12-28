@@ -54,6 +54,67 @@ module.exports = class Plugin_Generator {
         this.set_plugin_path( this.plugin_path + '/' + this.plugin_slug );
     }
 
+    init( options ){
+
+        if( options.description ){
+            plugin.set_description( options.description );
+        }
+
+        if( options.uri ){
+            plugin.set_plugin_uri( options.uri );
+        }
+
+        if( options.pluginVersion ){
+            plugin.set_version( options.pluginVersion );
+        }
+
+        if( options.updateUri ){
+            plugin.set_update_uri( options.updateUri );
+        }
+
+        if( options.licence ){
+            plugin.set_license( options.licence );
+        }
+
+        if( options.textDomain ){
+            plugin.set_text_domain( options.textDomain );
+        }
+
+        if( options.minWpVersion ){
+            plugin.set_min_wp_version( options.minWpVersion );
+        }
+
+        if( options.minPhpVersion ){
+            plugin.set_min_php_version( options.minPhpVersion );
+        }
+
+        if( options.author ){
+            plugin.set_author( options.author );
+        }
+
+        if( options.coreFunction ){
+            plugin.set_core_function( options.coreFunction );
+        }
+
+        if( options.authorUri ){
+            plugin.set_author_uri( options.authorUri );
+        }
+
+        if( options.namespace ){
+            plugin.set_namespace( options.namespace );
+        }
+
+        if( options.ajaxPrefix ){
+            plugin.set_ajax_prefix( options.ajaxPrefix );
+        }
+
+        if( options.ajaxSoftError ){
+            plugin.set_ajax_server_error( false );
+        }
+
+        return this;
+    }
+
     set_has_ajax( has_ajax ){
         this.has_ajax = has_ajax;
         return this;
