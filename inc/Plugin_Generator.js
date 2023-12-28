@@ -59,6 +59,11 @@ module.exports = class Plugin_Generator {
         return this;
     }
 
+    set_text_domain( text_domain ){
+        this.text_domain = text_domain;
+        return this;
+    }
+
     set_ajax_prefix( prefix ){
         this.ajax_prefix = prefix;
         return this;
