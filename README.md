@@ -1,4 +1,6 @@
-# WPCreator a package for speed up plugin development
+# WPCreator: a package for speed up plugin development
+[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/daneshjooyar/wpcreator/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/daneshjooyar/wpcreator/?branch=master)
+
 You can generate boilerplate wordpress plugin with simple command:
 
 ```
