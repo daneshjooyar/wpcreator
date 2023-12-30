@@ -25,5 +25,8 @@
   "homepage": "https://github.com/daneshjooyar/wpcreator#readme",
   "dependencies": {
     "commander": "^11.1.0"
+  },
+  "engines": {
+    "node": ">=16"
   }
 }
