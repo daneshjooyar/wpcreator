@@ -514,12 +514,13 @@ module.exports = class Plugin_Generator {
             .star_comment( 'Require autoload for namespace and another dependencies' )
             .line('require \'vendor/autoload.php\';')
             .line()
-            .line('$GLOBALS[\'' + this.plugin_slug.replace(/-/g, '_') + '\'] = new Loader();')
-            .line('$GLOBALS[\'' + this.plugin_slug.replace(/-/g, '_') + '\']->run();')
-            .line()
 
             .star_comment( 'Load plugin config as php constant' )
             .line(`require ${this.constant_prefix}_CORE_DIR . 'Config.php';`)
+            .line()
+
+            .line('$GLOBALS[\'' + this.plugin_slug.replace(/-/g, '_') + '\'] = new Loader();')
+            .line('$GLOBALS[\'' + this.plugin_slug.replace(/-/g, '_') + '\']->run();')
             .line()
 
             .star_comment( 'Load function loader' )

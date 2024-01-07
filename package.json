@@ -1,6 +1,6 @@
 {
   "name": "wpcreator",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "Plugin and theme boilerplate generator for wordpress developer",
   "main": "bin/wpcreator.js",
   "scripts": {
