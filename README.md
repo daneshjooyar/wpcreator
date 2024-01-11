@@ -21,6 +21,12 @@ cd {wordpress_dir}/wp-content/plugins/
 
 wpcreator plugin "Daneshjooyar Course Shop"
 ```
+Or use ``npx`` tool:
+
+```
+npx wpcreator plugin "Mypluygin"
+```
+
 And you have structured for start your plugin dev
 
 ## ``plugin`` subcommand:
