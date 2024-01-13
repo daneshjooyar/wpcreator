@@ -1,0 +1,213 @@
+    public function is_dev(){
+        return defined( 'PANEL_DEBUG' ) && PANEL_DEBUG;
+    }
+
+    public function get_panel_title(){
+        $title = 'پنل کاربری » ' . get_bloginfo( 'name' );
+        if( $this->is_login_page() ){
+            $title = 'ورود/ثبت نام » ' . get_bloginfo( 'name' );
+        }
+        return $title;
+    }
+
+    public function get_page(){
+        $explodes_uri = explode( '/', trim( $_SERVER['REQUEST_URI'], '/' ) );
+        return $explodes_uri[1] ? $explodes_uri[1] : false;
+    }
+
+    public function get_sub_page(){
+        $explodes_uri = explode( '/', trim( $_SERVER['REQUEST_URI'], '/' ) );
+        return $explodes_uri[2] ? $explodes_uri[2] : false;
+    }
+
+    public function redirection(){
+
+        if( $this->is_panel() ){
+
+            global $post;
+            $post = null;
+
+            if( is_user_logged_in() ){
+
+                if( $this->is_login_page() ){
+
+                    $r          = isset( $_GET['redirect'] ) ? trim( sanitize_text_field( $_GET['redirect'] ) ) : '';
+                    $redirect   = $this->url( 'dashboard/' );
+
+                    if( $r ){
+
+                        if( str_starts_with( $r, '/' ) ){//Example: /xd
+                            $redirect = home_url( $r );
+                        }elseif(
+                            str_starts_with( $r, 'http' )
+                            ||
+                            str_starts_with( $r, 'https' )
+                        ){
+                            $parsed = parse_url( $r );
+                            $path   = $parsed['path'];
+                            $q      = $parsed['query'] ?? '';
+                            if( $q ){
+                                $path.= $q;
+                            }
+                            $redirect = home_url( $path );
+                        }
+
+                    }
+
+                    if ( isset( $_GET['logout'] ) ){
+                        wp_logout();
+                        $redirect = home_url();
+                    }
+
+                    wp_redirect( $redirect );
+                    exit;
+
+                }
+
+                if( in_array( $_SERVER['REQUEST_URI'], [ $this->panel_slug, "/{$this->panel_slug}/" ] ) ){
+                    wp_redirect( $this->url( 'dashboard/' ) );
+                    exit;
+                }
+
+            }elseif( ! $this->is_login_page() ){//is not logged and is not login page
+
+                $redirect = [
+                    'redirect'  => $_SERVER['REQUEST_URI'],
+                ];
+
+                wp_redirect( $this->url( 'login/?' ) . http_build_query( $redirect ) );
+                exit;
+
+            }
+
+        }
+    }
+
+    public function query_vars( $vars ){
+        $vars[] = $this->panel_slug;
+        return $vars;
+    }
+
+    public function localize_data(){
+
+        $localize_data  = [
+
+        ];
+
+        $user           = [
+            'ID'            => wp_get_current_user()->ID,
+            'first_name'    => wp_get_current_user()->first_name,
+            'last_name'     => wp_get_current_user()->last_name,
+            'display_name'  => wp_get_current_user()->display_name,
+            'avatar'        => get_avatar_url( wp_get_current_user()->user_email ),
+            'nonce'         => wp_create_nonce( 'wp_rest' ),
+        ];
+
+        $localize_data['user'] = $user;
+
+        return sprintf('<script>var %s = %s</script>', $this->panel_slug, json_encode( $localize_data ) );
+
+    }
+
+    public function registerRewriteRule(){
+        add_rewrite_rule(
+            '^' . $this->panel_slug . '/?(([^/]+)/)?+',
+            'index.php?' . $this->panel_slug . '=true',
+            'top'
+        );
+
+        if(
+            isset( $_GET['logout'] )
+            &&
+            $_GET['logout']
+            &&
+            isset( $_GET['_wpnonce'] )
+            &&
+            wp_verify_nonce( $_GET['_wpnonce'], 'panel_logout' )
+        ){
+            wp_logout();
+            wp_redirect( panel()->url('login/') );
+            exit;
+        }
+
+    }
+
+    public function is_panel(){
+        return get_query_var( $this->panel_slug );
+    }
+
+    private function is_login_page() {
+        return str_starts_with( $_SERVER['REQUEST_URI'], '/' . $this->panel_slug . '/login' );
+    }
+
+    public function is_register_status(){
+        return $this->is_login_page() && isset( $_GET['action'] ) && $_GET['action'] == 'register';
+    }
+
+    public function is_login_status(){
+        return $this->is_login_page() && ! isset( $_GET['action'] );
+    }
+
+    public function url( $url_path = '' ){
+        $url_path = untrailingslashit( $url_path );
+        return home_url( $this->panel_slug . '/' . $url_path );
+    }
+
+    public function panelJs(){
+        return {{constant_prefix}}_PANEL_ASSETS_URL . $this->assets['js'];
+    }
+
+    public function panelCss(){
+        return {{constant_prefix}}_PANEL_ASSETS_URL . $this->assets['css'];
+    }
+
+    public function panel_header(){
+        include {{constant_prefix}}_VIEW_DIR . 'panel/header.php';
+    }
+
+    public function panel_footer(){
+        include {{constant_prefix}}_VIEW_DIR . 'panel/footer.php';
+    }
+
+    public function panel_class( $class = '' ){
+
+        $classes    = [$this->panel_slug];
+
+        $class_list = explode( ' ', $class );
+
+        $classes    = array_merge( $classes, $class_list  );
+
+        $classes    = apply_filters( 'panel_class', $classes );
+
+        $classes    = array_unique( $classes );
+
+        $classes    = array_map( 'esc_attr', $classes );
+
+        return implode( ' ', $classes );
+
+    }
+
+    /**
+     *
+     * Load Panel Template
+     *
+     * @param $template
+     * @return string
+     */
+    public function panelTemplate( $template ){
+
+        if( $this->is_panel() ){
+
+            if( $this->is_login_page() ){
+                return $this->view_path( 'Panel/login.php' );
+            }
+
+            return $this->view_path( 'Panel/index.php' );
+
+        }
+
+        $template = $this->view_path( 'main.php' );
+
+        return $template;
+
+    }

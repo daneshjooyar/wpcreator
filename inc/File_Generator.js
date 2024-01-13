@@ -25,9 +25,14 @@ module.exports = class File_Generator {
         return this;
     }
 
-    file_content( file_path ){
+    file_content( file_path, replacements = {} ){
         try{
-            this.body_code+= fs.readFileSync( config.path.raw_code + file_path, 'utf8' );
+            let file_contents = fs.readFileSync( config.path.raw_code + file_path, 'utf8' );
+            for (const [key, value] of Object.entries( replacements )) {
+                const regex = new RegExp(`{{${key}}}`, 'g');
+                file_contents = file_contents.replace(regex, value);
+            }
+            this.body_code+= file_contents;
         }catch ( err ){
             console.log( err );
         }

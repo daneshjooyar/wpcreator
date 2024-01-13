@@ -35,7 +35,7 @@ module.exports = class ClassGenerator extends File_Generator {
         return this;
     }
 
-    use(use) {
+    set_use(use) {
         this.uses.push(use);
         return this;
     }
