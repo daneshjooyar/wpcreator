@@ -1,10 +1,12 @@
 'use strict';
-const fs                = require('fs');
+const fs                = require('fs-extra');
 const File_Generator    = require('./File_Generator.js');
 const Class_Generator   = require('./Class_Generator.js');
-const config            = require('../Config.js');
+const { fork, exec, spawn }          = require('child_process');
 
 module.exports = class Plugin_Generator {
+
+    vite_version        = '5.0.10';
 
     plugin_name         = '';
 
@@ -50,6 +52,8 @@ module.exports = class Plugin_Generator {
 
     header              = {};
 
+    config              = {};
+
     constructor( plugin_name, plugin_path = process.cwd() ){
         this.plugin_path        = plugin_path;
         this.plugin_name        = plugin_name;
@@ -60,6 +64,10 @@ module.exports = class Plugin_Generator {
         this.text_domain        = plugin_name.toLowerCase().replace(/\s+/g, '_' );
         this.ajax_prefix        = this.text_domain;
         this.set_plugin_path( this.plugin_path + '/' + this.plugin_slug );
+    }
+
+    set_config( config ){
+        this.config = config;
     }
 
     init( options ){
@@ -208,7 +216,6 @@ module.exports = class Plugin_Generator {
         this.plugin_uri = uri;
         return this;
     }
-
 
     set_namespace( ns ){
         this.namespace = ns;
@@ -704,7 +711,8 @@ module.exports = class Plugin_Generator {
                 .line( 'add_action( \'template_include\', [$this, \'panel_template\'] );', 2 )
                 .line( 'add_action( \'template_redirect\', [$this, \'redirection\'] );', 2 )
                 .line( '', 2 )
-                .line( `$this->assets = require( ${this.constant_prefix}_PANEL_ASSETS_PATH . 'enqueue.php' );`, 2 )
+                .line( `$panel_assets_enqueue = ${this.constant_prefix}_PANEL_ASSETS_PATH . 'enqueue.php';`, 2 )
+                .line( `$this->assets = file_exists( $panel_assets_enqueue ) ? require( $panel_assets_enqueue ) : ['js' => '', 'css' => ''];`, 2 )
                 .line( '', 2 )
             .line( '}', 1 )
             .line()
@@ -728,6 +736,18 @@ module.exports = class Plugin_Generator {
                 .set_file_name('index.php')
                 .save_to( this.relative_path( 'Core/View/Panel' ) );
 
+
+            try {
+                fs.copySync(
+                    `${this.config.path.raw_code}vite/${this.vite_version}/Panel`,
+                    this.relative_path( 'Panel' ),
+                    {}
+                );
+                console.log('Vue panel copied to plugin');
+            } catch (err) {
+                console.log(err.message);
+            }
+
             let panel_assets_extrator = new File_Generator();
             panel_assets_extrator
                 .file_content( 'wordpress/panel/extractor_panel_version.txt' )
@@ -737,26 +757,13 @@ module.exports = class Plugin_Generator {
 
             let vite_config = new File_Generator();
             vite_config
-                .file_content( 'wordpress/vite-config.txt', {} )
+                .file_content( 'wordpress/vite-config.txt', {
+                    panel_port: this.panel_port
+                } )
                 .generate()
-                .set_file_name( 'vite.config-backup.js' )
+                .set_file_name( 'vite.config.js' )
                 .save_to( this.relative_path( 'Panel' ) );
 
-            let panel_instruction = new File_Generator();
-            panel_instruction
-                .line('1. Open cmd in Panel and run "npm create vite@latest" command ')
-                .line('     Set project name as "Panel"')
-                .line('     choose "Ignore files and continue"')
-                .line('     Set your package name')
-                .line('     choose "Vue"')
-                .line('     choose "Javascript"')
-                .line()
-                .line()
-                .line('2. go to Panel by "cd Panel" command, Run "npm install"')
-                .generate()
-                .set_file_name( 'panel_instruction.txt' )
-                .save_to( this.relative_path( 'Panel' ) );
-            //Add package.json
 
     }
 

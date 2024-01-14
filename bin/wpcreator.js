@@ -7,6 +7,7 @@ const path              = require('path');
 
 var pjson               = require('../package.json');
 
+const config            = require( '../Config' );
 
 const current_path      = process.cwd() + '/';
 
@@ -41,6 +42,8 @@ program.command('plugin')
     .action( (plugin_name, options) => {
 
         const plugin            = new Plugin_Generator( plugin_name );
+
+        plugin.set_config( config );
 
         plugin.init( options );
 
