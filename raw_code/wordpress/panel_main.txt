@@ -1,0 +1,33 @@
+<?php if( {{panel_function}}()->is_panel_dev() ):?>
+    <!DOCTYPE html>
+    <html lang="fa">
+        <head>
+            <script type="module" src="http://localhost:{{panel_port}}/@vite/client"></script>
+            <meta charset="UTF-8" />
+            <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+            <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+            <title>پنل کاربری » <?php echo get_bloginfo( 'name' );?></title>
+            <?php echo {{panel_function}}()->localize_data();?>
+        </head>
+        <body class="panel panel-logged-in">
+            <div id="app"></div>
+            <script type="module" src="http://localhost:{{panel_port}}/src/main.js"></script>
+        </body>
+    </html>
+<?php else:?>
+    <!DOCTYPE html>
+    <html lang="fa">
+        <head>
+            <meta charset="UTF-8">
+            <link rel="icon" href="/favicon.ico">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>پنل کاربری » <?php echo get_bloginfo( 'name' );?></title>
+            <?php echo panel()->localize_data();?>
+            <script type="module" crossorigin src="<?php echo esc_attr( {{panel_function}}()->panel_js() );?>"></script>
+            <link rel="stylesheet" href="<?php echo esc_attr( {{panel_function}}()->panel_css() );?>">
+        </head>
+        <body class="panel panel-logged-in">
+            <div id="app"></div>
+        </body>
+    </html>
+<?php endif;?>

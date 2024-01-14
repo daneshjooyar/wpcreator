@@ -1,10 +1,12 @@
 'use strict';
-const fs                = require('fs');
+const fs                = require('fs-extra');
 const File_Generator    = require('./File_Generator.js');
 const Class_Generator   = require('./Class_Generator.js');
-const config            = require('../Config.js');
+const { fork, exec, spawn }          = require('child_process');
 
 module.exports = class Plugin_Generator {
+
+    vite_version        = '5.0.10';
 
     plugin_name         = '';
 
@@ -45,8 +47,12 @@ module.exports = class Plugin_Generator {
      */
     panel_slug          = 'panel';
     panel_function      = 'panel';
+    panel_variable      = 'panelx';
+    panel_port          = 3001;
 
     header              = {};
+
+    config              = {};
 
     constructor( plugin_name, plugin_path = process.cwd() ){
         this.plugin_path        = plugin_path;
@@ -58,6 +64,10 @@ module.exports = class Plugin_Generator {
         this.text_domain        = plugin_name.toLowerCase().replace(/\s+/g, '_' );
         this.ajax_prefix        = this.text_domain;
         this.set_plugin_path( this.plugin_path + '/' + this.plugin_slug );
+    }
+
+    set_config( config ){
+        this.config = config;
     }
 
     init( options ){
@@ -206,7 +216,6 @@ module.exports = class Plugin_Generator {
         this.plugin_uri = uri;
         return this;
     }
-
 
     set_namespace( ns ){
         this.namespace = ns;
@@ -394,8 +403,8 @@ module.exports = class Plugin_Generator {
         if( this.panel_slug.length ){
             loader_class
                 .line('//Init panel', 2 )
-                .line( `$GLOBALS['${this.panel_slug}'] = new Panel();` ,2 )
-                .line( `$GLOBALS['${this.panel_slug}']->register();` ,2 )
+                .line( `$GLOBALS['${this.panel_variable}'] = new Panel();` ,2 )
+                .line( `$GLOBALS['${this.panel_variable}']->register();` ,2 )
         }
 
         loader_class
@@ -488,7 +497,7 @@ module.exports = class Plugin_Generator {
             .line(`if( ! function_exists( '${this.panel_function}' ) ){`)
                 .star_comment( `@return \\${this.namespace}\\Panel`, 1 )
                 .line(`function ${this.panel_function}(){`, 1)
-                    .line('return $GLOBALS[\'' + this.panel_slug + '\'];', 2)
+                    .line('return $GLOBALS[\'' + this.panel_variable + '\'];', 2)
                 .line("}", 1)
             .line('}')
 
@@ -546,7 +555,7 @@ module.exports = class Plugin_Generator {
             if( this.panel_slug.length ){
                 main_file
                     .star_comment( 'Define panel assets url' )
-                    .line( `define( '${this.constant_prefix}_PANEL_ASSETS_URL', ${this.constant_prefix}_URL . 'assets/panel' );` )
+                    .line( `define( '${this.constant_prefix}_PANEL_ASSETS_URL', ${this.constant_prefix}_URL . 'assets/panel/' );` )
                     .line();
             }
 
@@ -670,7 +679,7 @@ module.exports = class Plugin_Generator {
     generate_panel(){
 
         this.silent_index_to( 'Panel' );
-        this.silent_index_to( 'View/Panel' );
+        this.silent_index_to( 'Core/View/Panel' );
         this.silent_index_to( 'assets/panel' );
 
         const panel = new Class_Generator('Panel');
@@ -702,7 +711,8 @@ module.exports = class Plugin_Generator {
                 .line( 'add_action( \'template_include\', [$this, \'panel_template\'] );', 2 )
                 .line( 'add_action( \'template_redirect\', [$this, \'redirection\'] );', 2 )
                 .line( '', 2 )
-                .line( `$this->assets = require( ${this.constant_prefix}_PANEL_ASSETS_PATH . 'enqueue.php' );`, 2 )
+                .line( `$panel_assets_enqueue = ${this.constant_prefix}_PANEL_ASSETS_PATH . 'enqueue.php';`, 2 )
+                .line( `$this->assets = file_exists( $panel_assets_enqueue ) ? require( $panel_assets_enqueue ) : ['js' => '', 'css' => ''];`, 2 )
                 .line( '', 2 )
             .line( '}', 1 )
             .line()
@@ -715,6 +725,45 @@ module.exports = class Plugin_Generator {
             .generate()
             .set_file_name('Panel.php')
             .save_to( this.relative_path( 'Core' ) );
+
+            let panel_main = new File_Generator();
+            panel_main
+                .file_content( 'wordpress/panel_index.txt', {
+                    panel_function  : this.panel_function,
+                    panel_port      : this.panel_port,
+                } )
+                .generate()
+                .set_file_name('index.php')
+                .save_to( this.relative_path( 'Core/View/Panel' ) );
+
+
+            try {
+                fs.copySync(
+                    `${this.config.path.raw_code}vite/${this.vite_version}/Panel`,
+                    this.relative_path( 'Panel' ),
+                    {}
+                );
+                console.log('Vue panel copied to plugin');
+            } catch (err) {
+                console.log(err.message);
+            }
+
+            let panel_assets_extrator = new File_Generator();
+            panel_assets_extrator
+                .file_content( 'wordpress/panel/extractor_panel_version.txt' )
+                .generate()
+                .set_file_name('extractor_paneL_version.js')
+                .save_to( this.relative_path( 'Panel' ) );
+
+            let vite_config = new File_Generator();
+            vite_config
+                .file_content( 'wordpress/vite-config.txt', {
+                    panel_port: this.panel_port
+                } )
+                .generate()
+                .set_file_name( 'vite.config.js' )
+                .save_to( this.relative_path( 'Panel' ) );
+
 
     }
 

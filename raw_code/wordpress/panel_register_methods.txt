@@ -105,11 +105,11 @@
 
         $localize_data['user'] = $user;
 
-        return sprintf('<script>var %s = %s</script>', $this->panel_slug, json_encode( $localize_data ) );
+        return sprintf('<script>var %s = %s</script>' . PHP_EOL, $this->panel_slug, json_encode( $localize_data ) );
 
     }
 
-    public function registerRewriteRule(){
+    public function register_rewrite_rule(){
         add_rewrite_rule(
             '^' . $this->panel_slug . '/?(([^/]+)/)?+',
             'index.php?' . $this->panel_slug . '=true',
@@ -153,11 +153,11 @@
         return home_url( $this->panel_slug . '/' . $url_path );
     }
 
-    public function panelJs(){
+    public function panel_js(){
         return {{constant_prefix}}_PANEL_ASSETS_URL . $this->assets['js'];
     }
 
-    public function panelCss(){
+    public function panel_css(){
         return {{constant_prefix}}_PANEL_ASSETS_URL . $this->assets['css'];
     }
 
@@ -194,7 +194,7 @@
      * @param $template
      * @return string
      */
-    public function panelTemplate( $template ){
+    public function panel_template( $template ){
 
         if( $this->is_panel() ){
 
