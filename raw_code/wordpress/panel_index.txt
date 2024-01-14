@@ -5,7 +5,7 @@ defined( 'ABSPATH' ) || exit;
 <!DOCTYPE html>
 <html lang="fa">
 <head>
-    <script type="module" src="http://localhost:{{panel_port}}/@vite/client"></script>
+    <script type="module" src="http://localhost:<?php echo {{panel_function}}()->dev_port();?>/@vite/client"></script>
 
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
@@ -15,7 +15,7 @@ defined( 'ABSPATH' ) || exit;
 </head>
 <body class="panel panel-logged-in">
     <div id="app"></div>
-    <script type="module" src="http://localhost:{{panel_port}}/src/main.js"></script>
+    <script type="module" src="http://localhost:<?php echo {{panel_function}}()->dev_port();?>/src/main.js"></script>
 </body>
 </html>
 <?php else:?>

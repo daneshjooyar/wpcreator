@@ -720,6 +720,7 @@ module.exports = class Plugin_Generator {
             .file_content( 'wordpress/panel_register_methods.txt', {
                 panel_slug: this.panel_slug,
                 constant_prefix: this.constant_prefix,
+                panel_port: this.panel_port
             } )
 
             .generate()
