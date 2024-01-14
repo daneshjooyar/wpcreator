@@ -15,6 +15,8 @@ npm install -g wpcreator
 ```
 
 ## Generate Boilerplate Plugin
+
+###1. Create plugin base
 Go to directory that must contain your plugin such as ``/wp-content/plugins/`` and generate your base plugin:
 ```
 cd {wordpress_dir}/wp-content/plugins/
@@ -27,8 +29,21 @@ Or use ``npx`` tool:
 npx wpcreator plugin "Mypluygin"
 ```
 
-And you have structured for start your plugin dev
+### 2. Install plugin composer for active namespace
 
-## ``plugin`` subcommand:
+Go to new plugin directory and install composer:
+```
+cd daneshjooyar-course-shop
+composer install
+```
+### 3. Install Vue panel dependencies
 
-Generate Boilerplate plugin for start plugin development from base
+For install VueJs panel for to ``Panel`` directory and run below command:
+```
+cd Panel
+npm install
+```
+**Note:** For dev mode VueJs panel define ``PANEL_DEBUG`` in ``wp-config.php`` file:
+```php
+define( 'PANEL_DEBUG', true );
+```
