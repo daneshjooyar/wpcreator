@@ -2,6 +2,10 @@
         return defined( 'PANEL_DEBUG' ) && PANEL_DEBUG;
     }
 
+    public function dev_port(){
+        return {{panel_port}};
+    }
+
     public function get_panel_title(){
         $title = 'پنل کاربری » ' . get_bloginfo( 'name' );
         if( $this->is_login_page() ){
