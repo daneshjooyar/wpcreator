@@ -45,6 +45,8 @@ module.exports = class Plugin_Generator {
      */
     panel_slug          = 'panel';
     panel_function      = 'panel';
+    panel_variable      = 'panelx';
+    panel_port          = 3001;
 
     header              = {};
 
@@ -394,8 +396,8 @@ module.exports = class Plugin_Generator {
         if( this.panel_slug.length ){
             loader_class
                 .line('//Init panel', 2 )
-                .line( `$GLOBALS['${this.panel_slug}'] = new Panel();` ,2 )
-                .line( `$GLOBALS['${this.panel_slug}']->register();` ,2 )
+                .line( `$GLOBALS['${this.panel_variable}'] = new Panel();` ,2 )
+                .line( `$GLOBALS['${this.panel_variable}']->register();` ,2 )
         }
 
         loader_class
@@ -488,7 +490,7 @@ module.exports = class Plugin_Generator {
             .line(`if( ! function_exists( '${this.panel_function}' ) ){`)
                 .star_comment( `@return \\${this.namespace}\\Panel`, 1 )
                 .line(`function ${this.panel_function}(){`, 1)
-                    .line('return $GLOBALS[\'' + this.panel_slug + '\'];', 2)
+                    .line('return $GLOBALS[\'' + this.panel_variable + '\'];', 2)
                 .line("}", 1)
             .line('}')
 
@@ -546,7 +548,7 @@ module.exports = class Plugin_Generator {
             if( this.panel_slug.length ){
                 main_file
                     .star_comment( 'Define panel assets url' )
-                    .line( `define( '${this.constant_prefix}_PANEL_ASSETS_URL', ${this.constant_prefix}_URL . 'assets/panel' );` )
+                    .line( `define( '${this.constant_prefix}_PANEL_ASSETS_URL', ${this.constant_prefix}_URL . 'assets/panel/' );` )
                     .line();
             }
 
@@ -670,7 +672,7 @@ module.exports = class Plugin_Generator {
     generate_panel(){
 
         this.silent_index_to( 'Panel' );
-        this.silent_index_to( 'View/Panel' );
+        this.silent_index_to( 'Core/View/Panel' );
         this.silent_index_to( 'assets/panel' );
 
         const panel = new Class_Generator('Panel');
@@ -715,6 +717,46 @@ module.exports = class Plugin_Generator {
             .generate()
             .set_file_name('Panel.php')
             .save_to( this.relative_path( 'Core' ) );
+
+            let panel_main = new File_Generator();
+            panel_main
+                .file_content( 'wordpress/panel_index.txt', {
+                    panel_function  : this.panel_function,
+                    panel_port      : this.panel_port,
+                } )
+                .generate()
+                .set_file_name('index.php')
+                .save_to( this.relative_path( 'Core/View/Panel' ) );
+
+            let panel_assets_extrator = new File_Generator();
+            panel_assets_extrator
+                .file_content( 'wordpress/panel/extractor_panel_version.txt' )
+                .generate()
+                .set_file_name('extractor_paneL_version.js')
+                .save_to( this.relative_path( 'Panel' ) );
+
+            let vite_config = new File_Generator();
+            vite_config
+                .file_content( 'wordpress/vite-config.txt', {} )
+                .generate()
+                .set_file_name( 'vite.config-backup.js' )
+                .save_to( this.relative_path( 'Panel' ) );
+
+            let panel_instruction = new File_Generator();
+            panel_instruction
+                .line('1. Open cmd in Panel and run "npm create vite@latest" command ')
+                .line('     Set project name as "Panel"')
+                .line('     choose "Ignore files and continue"')
+                .line('     Set your package name')
+                .line('     choose "Vue"')
+                .line('     choose "Javascript"')
+                .line()
+                .line()
+                .line('2. go to Panel by "cd Panel" command, Run "npm install"')
+                .generate()
+                .set_file_name( 'panel_instruction.txt' )
+                .save_to( this.relative_path( 'Panel' ) );
+            //Add package.json
 
     }
 

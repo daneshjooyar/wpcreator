@@ -1,0 +1,16 @@
+import fs from 'fs'
+
+const panel_assets  = '../assets/panel/';
+const php_file      = panel_assets + 'enqueue.php';
+fs.readdir(panel_assets, (err, files) => {
+    let php = '<?php return array(';
+    files.forEach(file => {
+        if( file.startsWith( 'index-' ) && file.split('.').pop() == 'css' ){
+            php+= `'css' => '${file}',`;
+        }else if( file.startsWith( 'panel-' ) && file.split('.').pop() == 'js' ){
+            php+= `'js' => '${file}'`;
+        }
+    });
+    php+= ');'
+    fs.writeFileSync( php_file, php );
+});

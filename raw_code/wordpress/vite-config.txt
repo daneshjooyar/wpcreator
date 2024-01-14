@@ -1,0 +1,56 @@
+import { defineConfig } from 'vite'
+import { join, parse, resolve } from "path";
+import vue from '@vitejs/plugin-vue'
+
+// https://vitejs.dev/config/
+export default defineConfig({
+  server:{
+    port: {{panel_port}},
+    host: 'localhost',
+    proxy: {
+      '/localhost': {
+        target: 'ws://localhost:5173',
+        ws: true
+      }
+    }
+  },
+  resolve: {
+    mainFields: [
+      'browser',
+      'module',
+      'main',
+      'jsnext:main',
+      'jsnext'
+    ]
+  },
+  base: '',
+  root: './',
+  plugins: [vue()],
+  build: {
+    sourcemap     : false,
+    emptyOutDir   : true,
+    outDir        : './../assets/panel',
+    rollupOptions : {//https://rollupjs.org/configuration-options/
+      output  : {
+        entryFileNames: `[name]-[hash].js`,
+        chunkFileNames: `[name]-[hash].js`,
+        assetFileNames: `[name]-[hash].[ext]`
+      },
+      input   : {
+        panel: resolve(__dirname, 'index.html')
+      }
+    }
+  }
+})
+
+function entryPoints(...paths) {
+  const entries = paths.map(parse).map(entry => {
+    const { dir, base, name, ext } = entry;
+    const key = join(dir, name);
+    const path = resolve(__dirname, dir, base);
+    return [key, path];
+  });
+
+  const config = Object.fromEntries(entries);
+  return config;
+}
