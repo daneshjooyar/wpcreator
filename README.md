@@ -3,6 +3,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/daneshjooyar/wpcreator/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/daneshjooyar/wpcreator/?branch=master)
 [![Node Version](http://img.shields.io/node/v/commander.svg?style=flat)](https://www.npmjs.org/package/wpcreator)
+[![Download Count](https://img.shields.io/npm/dt/wpcreator.svg)](https://www.npmjs.org/package/wpcreator)
 
 You can generate boilerplate WordPress plugin with simple commands
 
