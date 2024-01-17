@@ -14,3 +14,4 @@ const plugin            = new Plugin_Generator( plugin_name );
 
 
 plugin.generate();
+//End of file
