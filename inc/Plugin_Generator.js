@@ -291,7 +291,7 @@ module.exports = class Plugin_Generator {
          * Make assets directories
          */
         this.silent_index_to( 'assets' )
-        this.silent_index_to( 'assets/image' )
+        this.silent_index_to( 'assets/images' )
         this.silent_index_to( 'assets/css' )
         this.silent_index_to( 'assets/js' )
 
