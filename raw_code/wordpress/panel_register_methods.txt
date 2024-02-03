@@ -210,8 +210,6 @@
 
         }
 
-        $template = $this->view_path( 'main.php' );
-
         return $template;
 
     }
