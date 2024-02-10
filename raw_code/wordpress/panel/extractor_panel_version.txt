@@ -3,14 +3,14 @@ import fs from 'fs'
 const panel_assets  = '../assets/panel/';
 const php_file      = panel_assets + 'enqueue.php';
 fs.readdir(panel_assets, (err, files) => {
-    let php = '<?php return array(';
+    let assets   = {}
     files.forEach(file => {
         if( file.startsWith( 'panel-' ) && file.split('.').pop() == 'css' ){
-            php+= `'css' => '${file}',`;
+            assets.css = file;
         }else if( file.startsWith( 'panel-' ) && file.split('.').pop() == 'js' ){
-            php+= `'js' => '${file}'`;
+            assets.js = file;
         }
     });
-    php+= ');'
+    let php = `<?php return array( 'js' => '${assets.js}', 'css' => '${assets.css}' );`
     fs.writeFileSync( php_file, php );
 });
